@@ -151,23 +151,6 @@ export function Dashboard({ progress, onNavigate }: DashboardProps) {
               {todayFact.fact}
             </p>
           </div>
-
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <button
-              onClick={() => onNavigate('map')}
-              className="card card-hover p-4 text-center group"
-            >
-              <div className="font-hanzi text-2xl text-crimson-600 mb-1">地图</div>
-              <p className="text-sm text-ink-600 font-medium">Карта Китая</p>
-            </button>
-            <button
-              onClick={() => onNavigate('culture')}
-              className="card card-hover p-4 text-center group"
-            >
-              <div className="font-hanzi text-2xl text-crimson-600 mb-1">文化</div>
-              <p className="text-sm text-ink-600 font-medium">Культура</p>
-            </button>
-          </div>
         </div>
       </div>
 

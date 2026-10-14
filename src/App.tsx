@@ -3,8 +3,6 @@ import { Navigation } from '@/components/Navigation';
 import type { PageId } from '@/components/Navigation';
 import { Dashboard } from '@/pages/Dashboard';
 import { LanguageHub } from '@/pages/LanguageHub';
-import { MapPage } from '@/pages/MapPage';
-import { CulturePage } from '@/pages/CulturePage';
 import { QuizPage } from '@/pages/QuizPage';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -21,8 +19,6 @@ function App() {
         {page === 'language' && (
           <LanguageHub progress={progress} onToggleMastered={toggleMastered} />
         )}
-        {page === 'map' && <MapPage />}
-        {page === 'culture' && <CulturePage />}
         {page === 'quiz' && <QuizPage progress={progress} onRecordQuiz={recordQuiz} />}
       </main>
 

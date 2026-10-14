@@ -1,6 +1,6 @@
-import { Home, Languages, Map, BookOpen, HelpCircle, Flame } from 'lucide-react';
+import { Home, Languages, HelpCircle, Flame } from 'lucide-react';
 
-export type PageId = 'dashboard' | 'language' | 'map' | 'culture' | 'quiz';
+export type PageId = 'dashboard' | 'language' | 'quiz';
 
 interface NavigationProps {
   currentPage: PageId;
@@ -11,8 +11,6 @@ interface NavigationProps {
 const navItems: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: 'dashboard', label: 'Главная', icon: Home },
   { id: 'language', label: 'Язык', icon: Languages },
-  { id: 'map', label: 'Карта', icon: Map },
-  { id: 'culture', label: 'Культура', icon: BookOpen },
   { id: 'quiz', label: 'Тесты', icon: HelpCircle },
 ];
 
