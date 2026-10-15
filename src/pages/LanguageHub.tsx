@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Shuffle, Info, Music } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Shuffle, Info, Music, Zap, Folder, ArrowLeft } from 'lucide-react';
 import { hanziData, tonesData } from '@/data/hanzi';
 import { Flashcard } from '@/components/Flashcard';
 import { AudioButton } from '@/components/AudioButton';
@@ -11,15 +11,29 @@ interface LanguageHubProps {
 }
 
 type Tab = 'flashcards' | 'tones';
+type Mode = 'normal' | 'storm';
 
 export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
   const [tab, setTab] = useState<Tab>('flashcards');
+  const [mode, setMode] = useState<Mode>('normal');
+  const [stormGroupId, setStormGroupId] = useState<string | null>(null);
   const [hskFilter, setHskFilter] = useState<1 | 2 | 'all'>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shuffled, setShuffled] = useState(false);
 
+  const stormGroup = progress.wordGroups.find(g => g.id === stormGroupId) ?? null;
+  const stormHanzi = useMemo(() => {
+    if (!stormGroup) return [];
+    return hanziData.filter(h => stormGroup.hanziIds.includes(h.id));
+  }, [stormGroup]);
+
   const filteredHanzi = useMemo(() => {
-    const base = hanziData.filter(h => hskFilter === 'all' || h.hskLevel === hskFilter);
+    let base: typeof hanziData;
+    if (mode === 'storm' && stormGroup) {
+      base = hanziData.filter(h => stormGroup.hanziIds.includes(h.id));
+    } else {
+      base = hanziData.filter(h => hskFilter === 'all' || h.hskLevel === hskFilter);
+    }
     if (!shuffled) return base;
     const copy = [...base];
     for (let i = copy.length - 1; i > 0; i--) {
@@ -27,7 +41,7 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     return copy;
-  }, [hskFilter, shuffled]);
+  }, [hskFilter, shuffled, mode, stormGroup]);
 
   const safeIndex = Math.min(currentIndex, filteredHanzi.length - 1);
   const currentCard = filteredHanzi[safeIndex];
@@ -39,7 +53,24 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
     setCurrentIndex(0);
   };
 
+  const startStorm = (groupId: string) => {
+    setMode('storm');
+    setStormGroupId(groupId);
+    setShuffled(true);
+    setCurrentIndex(0);
+    setTab('flashcards');
+  };
+
+  const exitStorm = () => {
+    setMode('normal');
+    setStormGroupId(null);
+    setShuffled(false);
+    setCurrentIndex(0);
+  };
+
   const masteredInFilter = filteredHanzi.filter(h => progress.masteredHanzi.includes(h.id)).length;
+
+  const groupsWithWords = progress.wordGroups.filter(g => g.hanziIds.length > 0);
 
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 pt-20 md:pt-24 pb-24 md:pb-8">
@@ -68,7 +99,79 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
         </button>
       </div>
 
-      {tab === 'flashcards' && currentCard && (
+      {tab === 'flashcards' && mode === 'storm' && stormGroup && (
+        <div>
+          {/* Storm mode banner */}
+          <div className="card p-4 mb-4 flex items-center justify-between bg-gradient-to-r from-gold-400 to-gold-500">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-ink-900 flex items-center justify-center">
+                <Zap size={22} className="text-gold-400" />
+              </div>
+              <div>
+                <h2 className="font-serif text-xl font-bold text-ink-900">Штурм: {stormGroup.name}</h2>
+                <p className="text-sm text-ink-700">
+                  {filteredHanzi.length} слов · выучено {masteredInFilter} / {filteredHanzi.length}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={exitStorm}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-ink-900 text-white text-sm font-medium hover:bg-ink-800 transition-all"
+            >
+              <ArrowLeft size={16} /> Выйти из штурма
+            </button>
+          </div>
+
+          {filteredHanzi.length === 0 ? (
+            <div className="card p-12 text-center">
+              <Folder size={48} className="text-ink-300 mx-auto mb-4" />
+              <p className="text-ink-500 text-lg">В этой группе нет слов</p>
+              <p className="text-ink-400 text-sm mt-1">Добавьте слова в словаре, затем вернитесь к штурму</p>
+            </div>
+          ) : (
+            <div className="max-w-xl mx-auto">
+              <Flashcard
+                key={currentCard.id}
+                card={currentCard}
+                isMastered={progress.masteredHanzi.includes(currentCard.id)}
+                onToggleMastered={onToggleMastered}
+              />
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-3 mt-6">
+                <button
+                  onClick={prev}
+                  className="w-12 h-12 rounded-full bg-white border border-parchment-300 flex items-center justify-center text-ink-600 hover:bg-parchment-100 transition-all hover:scale-105"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <span className="text-sm text-ink-500 font-medium px-4">
+                  {safeIndex + 1} / {filteredHanzi.length}
+                </span>
+                <button
+                  onClick={next}
+                  className="w-12 h-12 rounded-full bg-white border border-parchment-300 flex items-center justify-center text-ink-600 hover:bg-parchment-100 transition-all hover:scale-105"
+                >
+                  <ChevronRight size={24} />
+                </button>
+                <button
+                  onClick={toggleShuffle}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-105 ml-2 ${
+                    shuffled
+                      ? 'bg-crimson-600 text-white'
+                      : 'bg-gold-500 text-ink-900 hover:bg-gold-600'
+                  }`}
+                  title={shuffled ? 'Выключить случайный порядок' : 'Случайный порядок'}
+                >
+                  <Shuffle size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === 'flashcards' && mode === 'normal' && currentCard && (
         <div>
           {/* HSK filter */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -92,6 +195,29 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
               </span>
             </div>
           </div>
+
+          {/* Storm groups selector */}
+          {groupsWithWords.length > 0 && (
+            <div className="card p-4 mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap size={18} className="text-gold-500" />
+                <h3 className="font-serif text-sm font-bold text-ink-900">Запустить шттурм по группе</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {groupsWithWords.map(group => (
+                  <button
+                    key={group.id}
+                    onClick={() => startStorm(group.id)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 text-ink-900 font-bold text-sm hover:from-gold-500 hover:to-gold-600 transition-all hover:scale-105 shadow-sm"
+                  >
+                    <Zap size={14} />
+                    {group.name}
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-ink-900/10">{group.hanziIds.length}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Flashcard */}
           <div className="max-w-xl mx-auto">
@@ -132,6 +258,13 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {tab === 'flashcards' && mode === 'normal' && !currentCard && (
+        <div className="card p-12 text-center">
+          <Info size={48} className="text-ink-300 mx-auto mb-4" />
+          <p className="text-ink-500 text-lg">Нет карточек для выбранного фильтра</p>
         </div>
       )}
 

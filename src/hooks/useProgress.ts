@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
+export interface WordGroup {
+  id: string;
+  name: string;
+  hanziIds: string[];
+}
+
 export interface UserProgress {
   streak: number;
   lastVisit: string;
@@ -9,6 +15,7 @@ export interface UserProgress {
   quizCompleted: number;
   totalQuizAnswered: number;
   totalCorrect: number;
+  wordGroups: WordGroup[];
 }
 
 const STORAGE_KEY = 'china_portal_progress';
@@ -22,6 +29,7 @@ const defaultProgress: UserProgress = {
   quizCompleted: 0,
   totalQuizAnswered: 0,
   totalCorrect: 0,
+  wordGroups: [],
 };
 
 function getDeviceId(): string {
@@ -53,6 +61,7 @@ function remoteRowToProgress(row: Record<string, unknown>): UserProgress {
     quizCompleted: row.quiz_completed as number,
     totalQuizAnswered: row.total_quiz_answered as number,
     totalCorrect: row.total_correct as number,
+    wordGroups: (row.word_groups as WordGroup[]) ?? [],
   };
 }
 
@@ -65,6 +74,7 @@ function progressToRemoteRow(progress: UserProgress): Record<string, unknown> {
     quiz_completed: progress.quizCompleted,
     total_quiz_answered: progress.totalQuizAnswered,
     total_correct: progress.totalCorrect,
+    word_groups: progress.wordGroups,
     updated_at: new Date().toISOString(),
   };
 }
@@ -177,5 +187,36 @@ export function useProgress() {
     }));
   }, [save]);
 
-  return { progress, toggleMastered, recordQuiz };
+  const createWordGroup = useCallback((name: string) => {
+    const group: WordGroup = { id: crypto.randomUUID(), name, hanziIds: [] };
+    save(prev => ({ ...prev, wordGroups: [...prev.wordGroups, group] }));
+    return group.id;
+  }, [save]);
+
+  const deleteWordGroup = useCallback((groupId: string) => {
+    save(prev => ({
+      ...prev,
+      wordGroups: prev.wordGroups.filter(g => g.id !== groupId),
+    }));
+  }, [save]);
+
+  const renameWordGroup = useCallback((groupId: string, name: string) => {
+    save(prev => ({
+      ...prev,
+      wordGroups: prev.wordGroups.map(g => g.id === groupId ? { ...g, name } : g),
+    }));
+  }, [save]);
+
+  const toggleWordInGroup = useCallback((groupId: string, hanziId: string) => {
+    save(prev => ({
+      ...prev,
+      wordGroups: prev.wordGroups.map(g => {
+        if (g.id !== groupId) return g;
+        const has = g.hanziIds.includes(hanziId);
+        return { ...g, hanziIds: has ? g.hanziIds.filter(id => id !== hanziId) : [...g.hanziIds, hanziId] };
+      }),
+    }));
+  }, [save]);
+
+  return { progress, toggleMastered, recordQuiz, createWordGroup, deleteWordGroup, renameWordGroup, toggleWordInGroup };
 }

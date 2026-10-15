@@ -9,7 +9,15 @@ import { useProgress } from '@/hooks/useProgress';
 
 function App() {
   const [page, setPage] = useState<PageId>('dashboard');
-  const { progress, toggleMastered, recordQuiz } = useProgress();
+  const {
+    progress,
+    toggleMastered,
+    recordQuiz,
+    createWordGroup,
+    deleteWordGroup,
+    renameWordGroup,
+    toggleWordInGroup,
+  } = useProgress();
 
   return (
     <div className="min-h-screen bg-parchment-50">
@@ -18,10 +26,21 @@ function App() {
       <main>
         {page === 'dashboard' && <Dashboard progress={progress} onNavigate={setPage} />}
         {page === 'language' && (
-          <LanguageHub progress={progress} onToggleMastered={toggleMastered} />
+          <LanguageHub
+            progress={progress}
+            onToggleMastered={toggleMastered}
+          />
         )}
         {page === 'dictionary' && (
-          <DictionaryPage progress={progress} onToggleMastered={toggleMastered} />
+          <DictionaryPage
+            progress={progress}
+            onToggleMastered={toggleMastered}
+            onCreateWordGroup={createWordGroup}
+            onDeleteWordGroup={deleteWordGroup}
+            onRenameWordGroup={renameWordGroup}
+            onToggleWordInGroup={toggleWordInGroup}
+            onNavigate={setPage}
+          />
         )}
         {page === 'quiz' && <QuizPage progress={progress} onRecordQuiz={recordQuiz} />}
       </main>
