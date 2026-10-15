@@ -3,6 +3,7 @@ import { Navigation } from '@/components/Navigation';
 import type { PageId } from '@/components/Navigation';
 import { Dashboard } from '@/pages/Dashboard';
 import { LanguageHub } from '@/pages/LanguageHub';
+import { DictionaryPage } from '@/pages/DictionaryPage';
 import { QuizPage } from '@/pages/QuizPage';
 import { useProgress } from '@/hooks/useProgress';
 
@@ -18,6 +19,9 @@ function App() {
         {page === 'dashboard' && <Dashboard progress={progress} onNavigate={setPage} />}
         {page === 'language' && (
           <LanguageHub progress={progress} onToggleMastered={toggleMastered} />
+        )}
+        {page === 'dictionary' && (
+          <DictionaryPage progress={progress} onToggleMastered={toggleMastered} />
         )}
         {page === 'quiz' && <QuizPage progress={progress} onRecordQuiz={recordQuiz} />}
       </main>

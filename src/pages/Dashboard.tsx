@@ -1,4 +1,4 @@
-import { Flame, TrendingUp, BookOpen, Trophy, Sparkles, ChevronRight, Calendar } from 'lucide-react';
+import { Flame, TrendingUp, BookOpen, BookMarked, Trophy, Sparkles, ChevronRight, Calendar } from 'lucide-react';
 import { hanziData, dailyFacts } from '@/data/hanzi';
 import { AudioButton } from '@/components/AudioButton';
 import type { UserProgress } from '@/hooks/useProgress';
@@ -44,6 +44,9 @@ export function Dashboard({ progress, onNavigate }: DashboardProps) {
           <div className="flex flex-wrap gap-3 mt-6">
             <button onClick={() => onNavigate('language')} className="btn-gold flex items-center gap-2">
               <BookOpen size={18} /> Начать изучение
+            </button>
+            <button onClick={() => onNavigate('dictionary')} className="bg-white/15 hover:bg-white/25 text-white border border-white/30 px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2">
+              <BookMarked size={18} /> Словарь
             </button>
             <button onClick={() => onNavigate('quiz')} className="bg-white/15 hover:bg-white/25 text-white border border-white/30 px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2">
               <Trophy size={18} /> Пройти тест
