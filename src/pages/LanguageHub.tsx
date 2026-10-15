@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Shuffle, Info, Music } from 'lucide-react';
 import { hanziData, tonesData } from '@/data/hanzi';
 import { Flashcard } from '@/components/Flashcard';
@@ -16,14 +16,28 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
   const [tab, setTab] = useState<Tab>('flashcards');
   const [hskFilter, setHskFilter] = useState<1 | 2 | 'all'>('all');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [shuffled, setShuffled] = useState(false);
 
-  const filteredHanzi = hanziData.filter(h => hskFilter === 'all' || h.hskLevel === hskFilter);
+  const filteredHanzi = useMemo(() => {
+    const base = hanziData.filter(h => hskFilter === 'all' || h.hskLevel === hskFilter);
+    if (!shuffled) return base;
+    const copy = [...base];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }, [hskFilter, shuffled]);
+
   const safeIndex = Math.min(currentIndex, filteredHanzi.length - 1);
   const currentCard = filteredHanzi[safeIndex];
 
   const next = () => setCurrentIndex(i => (i + 1) % filteredHanzi.length);
   const prev = () => setCurrentIndex(i => (i - 1 + filteredHanzi.length) % filteredHanzi.length);
-  const shuffle = () => setCurrentIndex(Math.floor(Math.random() * filteredHanzi.length));
+  const toggleShuffle = () => {
+    setShuffled(s => !s);
+    setCurrentIndex(0);
+  };
 
   const masteredInFilter = filteredHanzi.filter(h => progress.masteredHanzi.includes(h.id)).length;
 
@@ -106,9 +120,13 @@ export function LanguageHub({ progress, onToggleMastered }: LanguageHubProps) {
                 <ChevronRight size={24} />
               </button>
               <button
-                onClick={shuffle}
-                className="w-12 h-12 rounded-full bg-gold-500 flex items-center justify-center text-ink-900 hover:bg-gold-600 transition-all hover:scale-105 ml-2"
-                title="Случайная карточка"
+                onClick={toggleShuffle}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-105 ml-2 ${
+                  shuffled
+                    ? 'bg-crimson-600 text-white'
+                    : 'bg-gold-500 text-ink-900 hover:bg-gold-600'
+                }`}
+                title={shuffled ? 'Выключить случайный порядок' : 'Случайный порядок'}
               >
                 <Shuffle size={20} />
               </button>
